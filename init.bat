@@ -1,0 +1,1 @@
+@start cmd @cmd /k "setlocal && set PATH=%PATH%;%~dp0;"
