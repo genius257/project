@@ -1,0 +1,1 @@
+@"%~dp0PortableGit\cmd\git" %*
