@@ -36,7 +36,10 @@ param(
     [Parameter(Mandatory)][AllowEmptyString()][string] $FolderPrefix,
     [Parameter(Mandatory)][string] $ToolsDir,
     [ValidateSet('path','phar')][string] $WrapperKind = 'path',
-    [string] $PharName
+    [string] $PharName,
+    [string] $InstallDir,
+    [string] $VersionFile,
+    [string] $VersionField = 'version'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -45,8 +48,10 @@ if ($WrapperKind -eq 'phar' -and -not $PharName) {
     throw 'PharName is required when WrapperKind is phar.'
 }
 
+if (-not $InstallDir) { $InstallDir = $Tool }
+
 $root = Split-Path -Parent $ToolsDir
-$installRoot = Join-Path $root "installs\$Tool"
+$installRoot = Join-Path $root "installs\$InstallDir"
 $toolEsc = [regex]::Escape($Tool)
 $prefixEsc = [regex]::Escape($FolderPrefix)
 
@@ -63,14 +68,32 @@ Get-ChildItem -Path $ToolsDir -File -ErrorAction SilentlyContinue |
 if (-not (Test-Path $installRoot)) { return }
 
 $installs = Get-ChildItem -Path $installRoot -Directory | ForEach-Object {
-    if ($_.Name -match ('^' + $prefixEsc + '(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?')) {
-        $parts = @($matches[1], $matches[2], $matches[3])
-        if ($matches[4]) { $parts += $matches[4] }
-        $intParts = $parts | ForEach-Object { [int]$_ }
-        [PSCustomObject]@{
-            Name  = $_.Name
-            Parts = $parts
-            V     = [version]($intParts -join '.')
+    if ($VersionFile) {
+        $jsonPath = Join-Path $_.FullName $VersionFile
+        if (Test-Path $jsonPath) {
+            $json = Get-Content $jsonPath -Raw | ConvertFrom-Json
+            $ver = $json.$VersionField
+            if ($ver -match '^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$') {
+                $parts = @($matches[1], $matches[2], $matches[3])
+                if ($matches[4]) { $parts += $matches[4] }
+                $intParts = $parts | ForEach-Object { [int]$_ }
+                [PSCustomObject]@{
+                    Name  = $_.Name
+                    Parts = $parts
+                    V     = [version]($intParts -join '.')
+                }
+            }
+        }
+    } else {
+        if ($_.Name -match ('^' + $prefixEsc + '(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?')) {
+            $parts = @($matches[1], $matches[2], $matches[3])
+            if ($matches[4]) { $parts += $matches[4] }
+            $intParts = $parts | ForEach-Object { [int]$_ }
+            [PSCustomObject]@{
+                Name  = $_.Name
+                Parts = $parts
+                V     = [version]($intParts -join '.')
+            }
         }
     }
 }
@@ -93,23 +116,23 @@ foreach ($key in $tiers.Keys) {
     if ($WrapperKind -eq 'phar') {
         $bat = @"
 @echo off
-php "%~dp0..\installs\$Tool\$($i.Name)\$PharName" %*
+php "%~dp0..\installs\$InstallDir\$($i.Name)\$PharName" %*
 "@
         $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-exec "`$DIR/php" "`$DIR/../installs/$Tool/$($i.Name)/$PharName" "`$@"
+exec "`$DIR/php" "`$DIR/../installs/$InstallDir/$($i.Name)/$PharName" "`$@"
 "@
     } else {
         $bat = @"
 @echo off
-set PATH="%~dp0..\installs\$Tool\$($i.Name)";%PATH%
+set PATH="%~dp0..\installs\$InstallDir\$($i.Name)";%PATH%
 $Tool %*
 "@
         $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-export PATH="`$DIR/../installs/$Tool/$($i.Name):`$PATH"
+export PATH="`$DIR/../installs/$InstallDir/$($i.Name):`$PATH"
 exec $Tool "`$@"
 "@
     }

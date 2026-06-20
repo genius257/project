@@ -23,6 +23,8 @@ for /d %%i in ("%ROOT%\tools\node") do (
         del "%ROOT%\tools\node.bat" >nul 2>nul
         del "%ROOT%\tools\node.sh" >nul 2>nul
         powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool node -FolderPrefix "node-v" -ToolsDir "%ROOT%\tools"
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npm -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npx -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
         echo Migrated installs from tools\node\ to installs\node\.
         echo Use [5] Select active version to refresh the active wrapper.
     )
@@ -137,11 +139,17 @@ if "!WAS_ACTIVE!"=="1" (
     del "!WRAPPER!" >nul 2>nul
     del "%ROOT%\tools\node" >nul 2>nul
     del "%ROOT%\tools\node.sh" >nul 2>nul
-    echo Cleared tools\node.bat and tools\node ^(they pointed at the removed version^).
+    del "%ROOT%\tools\npm.bat" >nul 2>nul
+    del "%ROOT%\tools\npm" >nul 2>nul
+    del "%ROOT%\tools\npx.bat" >nul 2>nul
+    del "%ROOT%\tools\npx" >nul 2>nul
+    echo Cleared tools\node.bat, tools\npm.bat, tools\npx.bat ^(they pointed at the removed version^).
     echo Use [5] to set a new active version.
 )
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool node -FolderPrefix "node-v" -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npm -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npx -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
 
 echo.
 pause
@@ -172,9 +180,11 @@ if !ssel! gtr !scount! goto menu
 
 call set "STARGET=%%SFOLDER[!ssel!]%%"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool node -InstallName "!STARGET!" -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool npm -InstallName "!STARGET!" -InstallDir node -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool npx -InstallName "!STARGET!" -InstallDir node -ToolsDir "%ROOT%\tools"
 
 echo.
-echo tools\node.bat and tools\node.sh now point at !STARGET!.
+echo tools\node.bat, tools\npm.bat, tools\npx.bat now point at !STARGET!.
 echo.
 pause
 goto menu
@@ -248,12 +258,16 @@ if exist "!INSTALL_DIR!\node_modules\npm" (
 echo.
 echo Node.js installed at !INSTALL_DIR!
 powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool node -FolderPrefix "node-v" -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npm -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\rebuild_version_tiers.ps1" -Tool npx -InstallDir node -FolderPrefix "node-v" -VersionFile "node_modules\npm\package.json" -ToolsDir "%ROOT%\tools"
 
 set /a icount=0
 for /d %%i in ("%INSTALLS_DIR%\*") do set /a icount+=1
 set "WRAPPER=%ROOT%\tools\node.bat"
 if !icount! equ 1 if not exist "!WRAPPER!" (
     powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool node -InstallName "!DIRNAME!" -ToolsDir "%ROOT%\tools"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool npm -InstallName "!DIRNAME!" -InstallDir node -ToolsDir "%ROOT%\tools"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\write_active_wrapper.ps1" -Tool npx -InstallName "!DIRNAME!" -InstallDir node -ToolsDir "%ROOT%\tools"
     echo Auto-selected !DIRNAME! as active version.
 )
 

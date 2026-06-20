@@ -19,7 +19,8 @@ param(
     [Parameter(Mandatory)][string] $InstallName,
     [Parameter(Mandatory)][string] $ToolsDir,
     [ValidateSet('path','phar')][string] $WrapperKind = 'path',
-    [string] $PharName
+    [string] $PharName,
+    [string] $InstallDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,6 +29,8 @@ if ($WrapperKind -eq 'phar' -and -not $PharName) {
     throw 'PharName is required when WrapperKind is phar.'
 }
 
+if (-not $InstallDir) { $InstallDir = $Tool }
+
 $batPath    = Join-Path $ToolsDir ("$Tool.bat")
 $bashPath   = Join-Path $ToolsDir $Tool
 $legacyShPath = Join-Path $ToolsDir ("$Tool.sh")
@@ -35,23 +38,23 @@ $legacyShPath = Join-Path $ToolsDir ("$Tool.sh")
 if ($WrapperKind -eq 'phar') {
     $bat = @"
 @echo off
-php "%~dp0..\installs\$Tool\$InstallName\$PharName" %*
+php "%~dp0..\installs\$InstallDir\$InstallName\$PharName" %*
 "@
     $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-exec "`$DIR/php" "`$DIR/../installs/$Tool/$InstallName/$PharName" "`$@"
+exec "`$DIR/php" "`$DIR/../installs/$InstallDir/$InstallName/$PharName" "`$@"
 "@
 } else {
     $bat = @"
 @echo off
-set PATH="%~dp0..\installs\$Tool\$InstallName";%PATH%
+set PATH="%~dp0..\installs\$InstallDir\$InstallName";%PATH%
 $Tool %*
 "@
     $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
-export PATH="`$DIR/../installs/$Tool/${InstallName}:`$PATH"
+export PATH="`$DIR/../installs/$InstallDir/${InstallName}:`$PATH"
 exec $Tool "`$@"
 "@
 }
