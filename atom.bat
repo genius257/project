@@ -1,1 +1,0 @@
-@"%~dp0Atom x64\atom" %*

@@ -1,1 +1,0 @@
-@start "" "%~dp0VSCode-win32-x64-1.28.2\code" %*

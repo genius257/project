@@ -1,0 +1,23 @@
+# Bootstrapped binaries (fetched by setup\setup_7z.bat).
+bin/
+
+# Cached release archives (re-used across reinstalls).
+downloads/
+
+# Extracted tool installs (PHP, Node, phpactor, composer, ...).
+installs/
+
+# npm's bundle-local cache and global-install prefix, written into by
+# setup\node.bat's builtin npmrc.
+.npm-cache/
+.npm-prefix/
+
+# Generated wrappers in tools/: .bat for cmd, extensionless for bash,
+# both for active selectors and tier wrappers (php, php.bat, php8.4,
+# php8.4.bat, etc.). The directory is kept via .gitkeep.
+tools/*
+!tools/.gitkeep
+
+# OS noise
+Thumbs.db
+.DS_Store

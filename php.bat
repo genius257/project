@@ -1,1 +1,0 @@
-@"%~dp0php-7.4.3-nts-Win32-vc15-x64\php" %*
