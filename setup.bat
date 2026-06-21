@@ -13,6 +13,7 @@ echo   [1] PHP
 echo   [2] Node.js / npm
 echo   [3] phpactor
 echo   [4] Composer
+echo   [5] Git
 echo   [Q] Quit
 echo.
 set "choice="
@@ -32,6 +33,10 @@ if /i "!choice!"=="3" (
 )
 if /i "!choice!"=="4" (
     call "%ROOT%setup\composer.bat"
+    goto :menu
+)
+if /i "!choice!"=="5" (
+    call "%ROOT%setup\git.bat"
     goto :menu
 )
 if /i "!choice!"=="Q" goto :end

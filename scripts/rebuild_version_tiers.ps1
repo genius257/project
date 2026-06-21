@@ -38,6 +38,7 @@ param(
     [ValidateSet('path','phar')][string] $WrapperKind = 'path',
     [string] $PharName,
     [string] $InstallDir,
+    [string] $SubDir,
     [string] $VersionFile,
     [string] $VersionField = 'version'
 )
@@ -124,17 +125,31 @@ DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
 exec "`$DIR/php" "`$DIR/../installs/$InstallDir/$($i.Name)/$PharName" "`$@"
 "@
     } else {
-        $bat = @"
+        if ($SubDir) {
+            $bat = @"
+@echo off
+set PATH="%~dp0..\installs\$InstallDir\$($i.Name)\$SubDir";%PATH%
+$Tool %*
+"@
+            $sh = @"
+#!/usr/bin/env bash
+DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
+export PATH="`$DIR/../installs/$InstallDir/$($i.Name)/${SubDir}:`$PATH"
+exec $Tool "`$@"
+"@
+        } else {
+            $bat = @"
 @echo off
 set PATH="%~dp0..\installs\$InstallDir\$($i.Name)";%PATH%
 $Tool %*
 "@
-        $sh = @"
+            $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
 export PATH="`$DIR/../installs/$InstallDir/$($i.Name):`$PATH"
 exec $Tool "`$@"
 "@
+        }
     }
 
     Set-Content -Path $batPath -Value $bat -Encoding ASCII

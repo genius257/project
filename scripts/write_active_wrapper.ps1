@@ -20,7 +20,8 @@ param(
     [Parameter(Mandatory)][string] $ToolsDir,
     [ValidateSet('path','phar')][string] $WrapperKind = 'path',
     [string] $PharName,
-    [string] $InstallDir
+    [string] $InstallDir,
+    [string] $SubDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,17 +47,31 @@ DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
 exec "`$DIR/php" "`$DIR/../installs/$InstallDir/$InstallName/$PharName" "`$@"
 "@
 } else {
-    $bat = @"
+    if ($SubDir) {
+        $bat = @"
+@echo off
+set PATH="%~dp0..\installs\$InstallDir\$InstallName\$SubDir";%PATH%
+$Tool %*
+"@
+        $sh = @"
+#!/usr/bin/env bash
+DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
+export PATH="`$DIR/../installs/$InstallDir/${InstallName}/${SubDir}:`$PATH"
+exec $Tool "`$@"
+"@
+    } else {
+        $bat = @"
 @echo off
 set PATH="%~dp0..\installs\$InstallDir\$InstallName";%PATH%
 $Tool %*
 "@
-    $sh = @"
+        $sh = @"
 #!/usr/bin/env bash
 DIR="`$(cd "`$(dirname "`${BASH_SOURCE[0]}")" && pwd)"
 export PATH="`$DIR/../installs/$InstallDir/${InstallName}:`$PATH"
 exec $Tool "`$@"
 "@
+    }
 }
 
 # .bat: cmd is happy with CRLF, use Set-Content default behaviour.
